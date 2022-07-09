@@ -1,3 +1,5 @@
+const jwt = require('jsonwebtoken')
+const config = require('config')
 const { default: mongoose } = require('mongoose');
 const {connectToDB} = require('./connection')
 
@@ -13,5 +15,9 @@ const userSchema = new mongoose.Schema({
         lastLogin: {type: Date, default: Date}
 
 })
+userSchema.methods.generateLogInToken = function(){
+const token =  jwt.sign({id: this._id, role:this.roles}, config.get('jwtPrivateKey'))
+return token
+}
 const Users = mongoose.model('Users', userSchema);
 module.exports = {Users}

@@ -5,18 +5,20 @@ const router = express.Router();
 const {registerUser, login} = require('../Controllers/usersController')
 // Data validation
 const {validateUser} = require('../Controllers/dataValidation')
+//Authorization 
+const {auth} = require('../Middleware/auth')
+const {adminAuth} = require('../Middleware/adminAuth')
 /* Login. */
-router.post('/login',(req,res, next)=>{
+router.post('/login',async(req,res, next)=>{
         let userDetails = req.body
         let result = login(userDetails)
-    
-        result.then(function(response){
-            response_data = response
-            console.log(response)
+        await result.then(function(response){
+            console.log(response.token)
+            res.header('x-auth-token',response.token).send(response)
         })
+
       
-      res.send("logged in")
-       // console.log(result)   
+
         next()
 })
 /* Get list of Users. Allowed Roles [Admin] */
@@ -24,11 +26,14 @@ router.get('/users',(req,res)=>{
 
 })
 /* Register Users {Register Teacher / Registrar}. Allowed Roles ->[Admin] */
-router.post('/register',(req,res,next)=>{
+router.post('/register',adminAuth, async(req,res,next)=>{
     const {error} = validateUser(req.body)
     if(error) res.status(400).send(error.details[0].message)
     let result = registerUser(req.body)
-    res.send(result)
+    await result.then(function(response){
+        res.send(response)
+    })
+
     next();
 })
 /* Update User Info. Allowed Users [Admin] */

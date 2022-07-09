@@ -1,7 +1,7 @@
-const config = require('config')
+
 
 const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken')
+
 const {Users} = require('../Models/usersModel')
 const registerUser = async(userData) =>{
      let salt = await bcrypt.genSalt(10);
@@ -10,19 +10,20 @@ const registerUser = async(userData) =>{
      if(userExist) return "User already existed"
      const user = new Users(userData)
      let response =  user.save();
-     console.log(response)
      return "User Registered"
 }
 
-const login = async  (loginData)=>{
-    console.log(loginData)
+const login = async(loginData)=>{
     let getUser = await Users.findOne({userName: loginData.userName})
     if(!getUser) return "error! user not found"
     const checkPassword = await bcrypt.compare(loginData.password, getUser.password);
     if(!checkPassword) return "error! invalid password"
-    const token = jwt.sign({id: getUser._id}, config.get('jwtPrivateKey'))
-    // console.log("logged in", token)
-return token
+    // const token =  jwt.sign({id: getUser._id}, config.get('jwtPrivateKey'))
+    const token = getUser.generateLogInToken()
+        return {token,
+                role:getUser.roles,
+                user:getUser.userName}
+
 }
 
 module.exports = {
